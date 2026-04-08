@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Космический тап — кликер + головоломка</title>
+    <title>Космический тап — кликер + головоломка + бонус</title>
     <style>
         * {
             user-select: none;
@@ -115,6 +115,10 @@
             margin-top: 5px;
             box-shadow: 0 5px 0 #3a1c3e;
         }
+        .bonus-btn {
+            background: #2c6e2c;
+            box-shadow: 0 5px 0 #1c4a1c;
+        }
         .reset-btn {
             background: #3a2c2c;
             border: none;
@@ -215,13 +219,17 @@
                 <div class="boost-name">🔮 Головоломка</div>
                 <div class="boost-price">Угадай число за ⚡500</div>
             </div>
+            <div class="boost bonus-btn" id="dailyBonusBtn">
+                <div class="boost-name">🎁 Ежедневный бонус</div>
+                <div class="boost-price" id="bonusInfo">Забрать</div>
+            </div>
         </div>
         <button class="reset-btn" id="resetBtn">🔄 Сброс прогресса</button>
-        <footer>Тапай по кристаллу → получай ⚡Энергию<br>💎Кристаллы — за прохождение головоломки</footer>
+        <footer>Тапай по кристаллу → получай ⚡Энергию<br>💎Кристаллы — за прохождение головоломки и бонус</footer>
     </div>
 </div>
 
-<!-- Модальное окно головоломки -->
+<!-- Модальное окно головоломки (без изменений) -->
 <div id="puzzleModal" class="modal hidden">
     <div class="modal-content">
         <h3>🔮 Угадай число (1–10)</h3>
@@ -246,6 +254,10 @@
     let doublePrice = 50;
     let autoPrice = 100;
 
+    // --- Переменные для ежедневного бонуса ---
+    let lastBonusDate = null;    // дата последнего получения бонуса (строка YYYY-MM-DD)
+    let bonusDay = 1;            // текущий день бонуса (1–7)
+
     // DOM элементы
     const energyDisplay = document.getElementById('energyDisplay');
     const crystalDisplay = document.getElementById('crystalDisplay');
@@ -256,9 +268,15 @@
     const resetBtn = document.getElementById('resetBtn');
     const doublePriceSpan = document.getElementById('doublePrice');
     const autoPriceSpan = document.getElementById('autoPrice');
+    const dailyBonusBtn = document.getElementById('dailyBonusBtn');
+    const bonusInfo = document.getElementById('bonusInfo');
 
+    // --- Сохранение / загрузка (расширенная версия) ---
     function saveGame() {
-        const save = { energy, crystals, clickPower, autoIncome, doublePrice, autoPrice };
+        const save = { 
+            energy, crystals, clickPower, autoIncome, doublePrice, autoPrice,
+            lastBonusDate, bonusDay
+        };
         localStorage.setItem('clickerSaveV2', JSON.stringify(save));
     }
 
@@ -273,6 +291,8 @@
                 autoIncome = s.autoIncome ?? 0;
                 doublePrice = s.doublePrice ?? 50;
                 autoPrice = s.autoPrice ?? 100;
+                lastBonusDate = s.lastBonusDate ?? null;
+                bonusDay = s.bonusDay ?? 1;
                 if (autoIncome > 0 && !autoInterval) startAutoClicker();
                 updateUI();
             } catch(e) { console.warn("ошибка загрузки"); }
@@ -285,8 +305,72 @@
         clickPowerDisplay.innerText = clickPower;
         doublePriceSpan.innerText = doublePrice + ' 💎';
         autoPriceSpan.innerText = autoPrice + ' 💎';
+        updateBonusButtonUI();
     }
 
+    // --- Ежедневный бонус ---
+    function getTodayDate() {
+        const now = new Date();
+        return now.toISOString().slice(0,10); // YYYY-MM-DD
+    }
+
+    function canTakeBonus() {
+        const today = getTodayDate();
+        return lastBonusDate !== today;
+    }
+
+    function getBonusAmount(day) {
+        const rewards = [100, 200, 300, 400, 500, 600, 1000];
+        return rewards[day-1] || 100;
+    }
+
+    function takeDailyBonus() {
+        const today = getTodayDate();
+        if (lastBonusDate === today) {
+            alert('🎁 Ты уже забирал бонус сегодня! Возвращайся завтра.');
+            return false;
+        }
+        
+        // Если пропустил день — сбрасываем на 1
+        if (lastBonusDate !== null) {
+            const lastDate = new Date(lastBonusDate);
+            const currentDate = new Date(today);
+            const diffDays = Math.floor((currentDate - lastDate) / (1000 * 60 * 60 * 24));
+            if (diffDays > 1) {
+                bonusDay = 1;
+            } else if (diffDays === 1) {
+                bonusDay = Math.min(bonusDay + 1, 7);
+            }
+        }
+        
+        const reward = getBonusAmount(bonusDay);
+        crystals += reward;
+        
+        lastBonusDate = today;
+        // Если сегодня получили бонус за 7-й день, завтра будет снова 1-й день
+        if (bonusDay === 7) {
+            bonusDay = 1;
+        } else {
+            bonusDay++;
+        }
+        
+        updateUI();
+        saveGame();
+        alert(`🎉 Ежедневный бонус: +${reward} 💎 Кристаллов! Завтра будет ещё больше.`);
+        return true;
+    }
+
+    function updateBonusButtonUI() {
+        if (canTakeBonus()) {
+            bonusInfo.innerText = '🎁 Забрать';
+            dailyBonusBtn.style.opacity = '1';
+        } else {
+            bonusInfo.innerText = '✅ Уже получен';
+            dailyBonusBtn.style.opacity = '0.7';
+        }
+    }
+
+    // --- Автокликер и остальная логика (без изменений) ---
     function startAutoClicker() {
         if (autoInterval) clearInterval(autoInterval);
         autoInterval = setInterval(() => {
@@ -327,13 +411,15 @@
     };
 
     resetBtn.onclick = () => {
-        if (confirm('♻️ Сбросить весь прогресс?')) {
+        if (confirm('♻️ Сбросить весь прогресс? Энергия, кристаллы и улучшения будут удалены.')) {
             energy = 200;
             crystals = 50;
             clickPower = 1;
             autoIncome = 0;
             doublePrice = 50;
             autoPrice = 100;
+            lastBonusDate = null;
+            bonusDay = 1;
             if (autoInterval) clearInterval(autoInterval);
             autoInterval = null;
             updateUI();
@@ -341,7 +427,7 @@
         }
     };
 
-    // ========== ГОЛОВОЛОМКА (ИСПРАВЛЕННАЯ ВЕРСИЯ) ==========
+    // --- Головоломка (исправленная версия) ---
     const modal = document.getElementById('puzzleModal');
     const openPuzzleBtn = document.getElementById('openPuzzleBtn');
     const closePuzzleBtn = document.getElementById('closePuzzleBtn');
@@ -412,7 +498,6 @@
         }
 
         if (guess === currentSecretNumber) {
-            // ПОБЕДА!
             const rewardCrystals = 1000;
             crystals += rewardCrystals;
             clickPower++;
@@ -422,7 +507,6 @@
             submitGuessBtn.disabled = true;
             retryArea.innerHTML = '';
         } else {
-            // ПРОИГРЫШ — блокируем кнопку "Угадать"
             submitGuessBtn.disabled = true;
             puzzleMessage.innerHTML = `❌ Не угадал! Загадано не ${guess}. Попробуй ещё раз за кристаллы.`;
 
@@ -454,9 +538,15 @@
 
     submitGuessBtn.onclick = processGuess;
 
+    // --- Инициализация ---
     loadGame();
     if (autoIncome > 0 && !autoInterval) startAutoClicker();
     updateUI();
+
+    // --- Обработчик кнопки бонуса ---
+    dailyBonusBtn.onclick = () => {
+        takeDailyBonus();
+    };
 </script>
 </body>
 </html>
