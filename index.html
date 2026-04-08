@@ -237,9 +237,9 @@
 </div>
 
 <script>
-    // --- Игровые переменные (НОВЫЙ БАЛАНС) ---
-    let energy = 200;        // начальный запас энергии
-    let crystals = 50;       // начальный запас кристаллов
+    // --- Игровые переменные ---
+    let energy = 200;
+    let crystals = 50;
     let clickPower = 1;
     let autoIncome = 0;
     let autoInterval = null;
@@ -257,7 +257,6 @@
     const doublePriceSpan = document.getElementById('doublePrice');
     const autoPriceSpan = document.getElementById('autoPrice');
 
-    // --- Логика сохранения ---
     function saveGame() {
         const save = { energy, crystals, clickPower, autoIncome, doublePrice, autoPrice };
         localStorage.setItem('clickerSaveV2', JSON.stringify(save));
@@ -280,7 +279,6 @@
         }
     }
 
-    // --- Обновление интерфейса ---
     function updateUI() {
         energyDisplay.innerText = Math.floor(energy);
         crystalDisplay.innerText = Math.floor(crystals);
@@ -289,7 +287,6 @@
         autoPriceSpan.innerText = autoPrice + ' 💎';
     }
 
-    // --- Автокликер (приносит энергию) ---
     function startAutoClicker() {
         if (autoInterval) clearInterval(autoInterval);
         autoInterval = setInterval(() => {
@@ -301,7 +298,6 @@
         }, 1000);
     }
 
-    // --- Клик по кристаллу (даёт энергию) ---
     clickButton.onclick = () => {
         energy += clickPower;
         updateUI();
@@ -310,7 +306,6 @@
         setTimeout(() => clickButton.style.transform = '', 80);
     };
 
-    // --- Улучшения (тратят кристаллы) ---
     boostDouble.onclick = () => {
         if (crystals >= doublePrice) {
             crystals -= doublePrice;
@@ -331,9 +326,8 @@
         }
     };
 
-    // --- Сброс прогресса ---
     resetBtn.onclick = () => {
-        if (confirm('♻️ Сбросить весь прогресс? Энергия, кристаллы и улучшения будут удалены.')) {
+        if (confirm('♻️ Сбросить весь прогресс?')) {
             energy = 200;
             crystals = 50;
             clickPower = 1;
@@ -347,7 +341,7 @@
         }
     };
 
-    // ========== ГОЛОВОЛОМКА (УГАДАЙ ЧИСЛО) ==========
+    // ========== ГОЛОВОЛОМКА (ИСПРАВЛЕННАЯ ВЕРСИЯ) ==========
     const modal = document.getElementById('puzzleModal');
     const openPuzzleBtn = document.getElementById('openPuzzleBtn');
     const closePuzzleBtn = document.getElementById('closePuzzleBtn');
@@ -428,8 +422,9 @@
             submitGuessBtn.disabled = true;
             retryArea.innerHTML = '';
         } else {
-            // ПРОИГРЫШ
-            puzzleMessage.innerHTML = `❌ Не угадал! Загадано не ${guess}. Хочешь попробовать ещё раз?`;
+            // ПРОИГРЫШ — блокируем кнопку "Угадать"
+            submitGuessBtn.disabled = true;
+            puzzleMessage.innerHTML = `❌ Не угадал! Загадано не ${guess}. Попробуй ещё раз за кристаллы.`;
 
             if (!isRetryMode) {
                 const retryButton = document.createElement('button');
@@ -448,7 +443,7 @@
                         retryArea.innerHTML = '';
                         submitGuessBtn.disabled = false;
                     } else {
-                        alert('❌ Не хватает 💎 Кристаллов! Закрой окно и заработай кристаллы через головоломку или улучшения.');
+                        alert('❌ Не хватает 💎 Кристаллов! Закрой окно и заработай кристаллы.');
                     }
                 };
                 retryArea.innerHTML = '';
@@ -459,7 +454,6 @@
 
     submitGuessBtn.onclick = processGuess;
 
-    // --- Инициализация игры ---
     loadGame();
     if (autoIncome > 0 && !autoInterval) startAutoClicker();
     updateUI();
