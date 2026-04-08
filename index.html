@@ -213,7 +213,7 @@
         <div class="boost-panel">
             <div class="boost puzzle-btn" id="openPuzzleBtn">
                 <div class="boost-name">🔮 Головоломка</div>
-                <div class="boost-price">Угадай число за ⚡50</div>
+                <div class="boost-price">Угадай число за ⚡500</div>
             </div>
         </div>
         <button class="reset-btn" id="resetBtn">🔄 Сброс прогресса</button>
@@ -225,7 +225,7 @@
 <div id="puzzleModal" class="modal hidden">
     <div class="modal-content">
         <h3>🔮 Угадай число (1–10)</h3>
-        <p>⚡ Стоимость попытки: <strong>50 Энергии</strong></p>
+        <p>⚡ Стоимость попытки: <strong>500 Энергии</strong></p>
         <p id="puzzleMessage">Введи число и испытай удачу!</p>
         <input type="number" id="guessInput" min="1" max="10" placeholder="Число от 1 до 10">
         <div>
@@ -237,9 +237,9 @@
 </div>
 
 <script>
-    // --- Игровые переменные ---
-    let energy = 100;        // новая валюта (бывшие монеты)
-    let crystals = 20;       // новая валюта (премиум)
+    // --- Игровые переменные (НОВЫЙ БАЛАНС) ---
+    let energy = 200;        // начальный запас энергии
+    let crystals = 50;       // начальный запас кристаллов
     let clickPower = 1;
     let autoIncome = 0;
     let autoInterval = null;
@@ -268,8 +268,8 @@
         if (raw) {
             try {
                 const s = JSON.parse(raw);
-                energy = s.energy ?? 100;
-                crystals = s.crystals ?? 20;
+                energy = s.energy ?? 200;
+                crystals = s.crystals ?? 50;
                 clickPower = s.clickPower ?? 1;
                 autoIncome = s.autoIncome ?? 0;
                 doublePrice = s.doublePrice ?? 50;
@@ -334,8 +334,8 @@
     // --- Сброс прогресса ---
     resetBtn.onclick = () => {
         if (confirm('♻️ Сбросить весь прогресс? Энергия, кристаллы и улучшения будут удалены.')) {
-            energy = 100;
-            crystals = 20;
+            energy = 200;
+            crystals = 50;
             clickPower = 1;
             autoIncome = 0;
             doublePrice = 50;
@@ -357,8 +357,8 @@
     const retryArea = document.getElementById('retryArea');
 
     let currentSecretNumber = null;
-    let currentAttemptCostPaid = false;  // флаг, что вход оплачен (50 энергии)
-    let isRetryMode = false;              // режим повторной попытки за кристаллы
+    let currentAttemptCostPaid = false;
+    let isRetryMode = false;
 
     function generateSecret() {
         return Math.floor(Math.random() * 10) + 1;
@@ -385,8 +385,7 @@
     };
 
     openPuzzleBtn.onclick = () => {
-        // Проверяем, хватает ли энергии на вход
-        if (energy >= 50) {
+        if (energy >= 500) {
             openPuzzle();
         } else {
             alert('❌ Не хватает ⚡Энергии! Тапай по кристаллу, чтобы получить энергию.');
@@ -394,8 +393,8 @@
     };
 
     function payEnergyForAttempt() {
-        if (energy >= 50 && !currentAttemptCostPaid) {
-            energy -= 50;
+        if (energy >= 500 && !currentAttemptCostPaid) {
+            energy -= 500;
             currentAttemptCostPaid = true;
             updateUI();
             saveGame();
@@ -406,7 +405,6 @@
 
     function processGuess() {
         if (!currentAttemptCostPaid) {
-            // Пытаемся списать энергию при первой попытке
             if (!payEnergyForAttempt()) {
                 puzzleMessage.innerHTML = '❌ Не хватает ⚡Энергии для попытки! Закрой окно и накопай энергию.';
                 return;
@@ -421,33 +419,30 @@
 
         if (guess === currentSecretNumber) {
             // ПОБЕДА!
-            const rewardCrystals = 200;
+            const rewardCrystals = 1000;
             crystals += rewardCrystals;
             clickPower++;
             puzzleMessage.innerHTML = `🎉 ПОБЕДА! Число было ${currentSecretNumber}. Ты получаешь ${rewardCrystals} 💎 Кристаллов и +1 к силе клика! 🎉`;
             updateUI();
             saveGame();
             submitGuessBtn.disabled = true;
-            retryArea.innerHTML = ''; // победа — игра окончена
-            // Можно закрыть окно через 2 секунды, но пусть игрок закроет сам
+            retryArea.innerHTML = '';
         } else {
             // ПРОИГРЫШ
             puzzleMessage.innerHTML = `❌ Не угадал! Загадано не ${guess}. Хочешь попробовать ещё раз?`;
 
-            // Предлагаем повторную попытку за кристаллы
             if (!isRetryMode) {
                 const retryButton = document.createElement('button');
-                retryButton.innerText = '🔄 Попробовать ещё раз за 100 💎';
+                retryButton.innerText = '🔄 Попробовать ещё раз за 300 💎';
                 retryButton.className = 'retry-btn';
                 retryButton.onclick = () => {
-                    if (crystals >= 100) {
-                        crystals -= 100;
+                    if (crystals >= 300) {
+                        crystals -= 300;
                         updateUI();
                         saveGame();
-                        // Перезапускаем головоломку с новым числом, не тратя энергию
                         currentSecretNumber = generateSecret();
                         isRetryMode = true;
-                        currentAttemptCostPaid = true; // энергию повторно не берём
+                        currentAttemptCostPaid = true;
                         puzzleMessage.innerHTML = 'Новая попытка! Введи число от 1 до 10.';
                         guessInput.value = '';
                         retryArea.innerHTML = '';
