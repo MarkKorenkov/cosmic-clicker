@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Космический тап — кликер для VK</title>
+    <title>Космический тап — кликер + головоломка</title>
     <style>
         * {
             user-select: none;
             -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
         }
         body {
             margin: 0;
@@ -16,50 +17,68 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             touch-action: manipulation;
+            padding: 16px;
         }
         .game-container {
             background: rgba(0,0,0,0.4);
             border-radius: 60px;
-            padding: 20px;
+            padding: 16px;
             box-shadow: 0 20px 35px rgba(0,0,0,0.5);
             width: 100%;
-            max-width: 500px;
+            max-width: 550px;
         }
         .game {
             text-align: center;
-            padding: 20px;
+            padding: 16px;
             background: #0f3460;
             border-radius: 50px;
             box-shadow: inset 0 0 10px #00000030, 0 10px 20px rgba(0,0,0,0.2);
         }
         h1 {
             margin: 0 0 10px 0;
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             color: #ffd966;
             text-shadow: 2px 2px 0 #b45309;
+        }
+        .resources {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            background: #00000080;
+            border-radius: 60px;
+            padding: 8px 16px;
+            margin-bottom: 15px;
+            backdrop-filter: blur(4px);
+        }
+        .resource {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #fff;
+        }
+        .resource span {
+            font-size: 1.6rem;
+            color: #f9f871;
         }
         .score-board {
             background: #00000080;
             border-radius: 60px;
-            padding: 12px 20px;
-            margin: 15px 10px;
-            backdrop-filter: blur(4px);
+            padding: 8px 12px;
+            margin: 10px 0;
         }
         .score-value {
-            font-size: 3.2rem;
+            font-size: 2.5rem;
             font-weight: bold;
             color: #f9f871;
             text-shadow: 0 0 5px #ffaa00;
-            margin: 5px 0;
         }
         .click-btn {
             background: radial-gradient(circle at 30% 20%, #ffb347, #ff6b35);
-            width: 220px;
-            height: 220px;
+            width: 180px;
+            height: 180px;
             border-radius: 50%;
-            margin: 15px auto;
+            margin: 10px auto;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -71,97 +90,166 @@
             transform: scale(0.96);
         }
         .coin-icon {
-            font-size: 5rem;
-            filter: drop-shadow(2px 4px 8px rgba(0,0,0,0.5));
+            font-size: 4rem;
         }
         .boost-panel {
             display: flex;
             justify-content: space-between;
-            gap: 15px;
-            margin-top: 25px;
+            gap: 10px;
+            margin: 15px 0;
         }
         .boost {
             background: #2c2c54;
-            padding: 10px;
+            padding: 8px;
             border-radius: 30px;
             flex: 1;
             cursor: pointer;
             transition: 0.1s linear;
             box-shadow: 0 5px 0 #12122c;
         }
-        .boost:active {
-            transform: translateY(2px);
-        }
-        .boost-name {
-            font-weight: bold;
-            color: #ffb347;
-        }
-        .boost-price {
-            font-size: 0.9rem;
-            color: #ffd966;
-            font-weight: bold;
+        .boost:active { transform: translateY(2px); }
+        .boost-name { font-weight: bold; color: #ffb347; font-size: 0.9rem; }
+        .boost-price { font-size: 0.8rem; color: #ffd966; }
+        .puzzle-btn {
+            background: #6a2c70;
+            margin-top: 5px;
+            box-shadow: 0 5px 0 #3a1c3e;
         }
         .reset-btn {
             background: #3a2c2c;
             border: none;
             color: #ffaaaa;
-            padding: 8px 20px;
+            padding: 8px 16px;
             border-radius: 40px;
             font-size: 0.8rem;
             cursor: pointer;
-            margin-top: 20px;
+            margin-top: 12px;
+        }
+        .modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #0f3460;
+            padding: 20px;
+            border-radius: 40px;
+            text-align: center;
+            max-width: 300px;
+            width: 80%;
+            color: white;
+        }
+        .modal-content input {
+            padding: 10px;
+            font-size: 1.2rem;
+            text-align: center;
+            border-radius: 30px;
+            border: none;
+            margin: 10px 0;
+            width: 80%;
+        }
+        .modal-content button {
+            background: #ffb347;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-weight: bold;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .retry-btn {
+            background: #6a2c70;
+            color: white;
+        }
+        .close-btn {
+            background: #3a2c2c;
+            color: white;
         }
         footer {
-            margin-top: 12px;
             font-size: 0.7rem;
             color: #aaa;
+            margin-top: 12px;
+        }
+        .hidden { display: none; }
+        .inline-link {
+            background: none;
+            border: none;
+            color: #ffb347;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.9rem;
         }
     </style>
-    <!-- Подключаем VK Bridge -->
-    <script src="https://vk.com/js/api/xd_connection.js?2"></script>
-    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
 </head>
 <body>
 <div class="game-container">
     <div class="game">
         <h1>🚀 КОСМОКЛИКЕР</h1>
-        <div class="score-board">
-            <div class="score-value" id="scoreDisplay">0</div>
+        <div class="resources">
+            <div class="resource">⚡ Энергия: <span id="energyDisplay">0</span></div>
+            <div class="resource">💎 Кристаллы: <span id="crystalDisplay">0</span></div>
         </div>
         <div class="click-btn" id="clickButton">
             <div class="coin-icon">💎</div>
         </div>
+        <div class="score-board">
+            <div class="score-value">Сила клика: <span id="clickPowerDisplay">1</span></div>
+        </div>
         <div class="boost-panel">
             <div class="boost" id="boostDouble">
                 <div class="boost-name">✨ Удвоитель</div>
-                <div class="boost-price" id="doublePrice">50</div>
+                <div class="boost-price" id="doublePrice">50 💎</div>
             </div>
             <div class="boost" id="boostAuto">
                 <div class="boost-name">🤖 Автокликер</div>
-                <div class="boost-price" id="autoPrice">100</div>
+                <div class="boost-price" id="autoPrice">100 💎</div>
             </div>
         </div>
-        <button class="reset-btn" id="resetBtn">🔄 Сброс</button>
-        <footer>Тапай по 💎</footer>
+        <div class="boost-panel">
+            <div class="boost puzzle-btn" id="openPuzzleBtn">
+                <div class="boost-name">🔮 Головоломка</div>
+                <div class="boost-price">Угадай число за ⚡50</div>
+            </div>
+        </div>
+        <button class="reset-btn" id="resetBtn">🔄 Сброс прогресса</button>
+        <footer>Тапай по кристаллу → получай ⚡Энергию<br>💎Кристаллы — за прохождение головоломки</footer>
     </div>
 </div>
-<script>
-    // Инициализация VK Bridge
-    if (typeof vkBridge !== 'undefined') {
-        vkBridge.send('VKWebAppInit', {});
-        console.log('VK Bridge initialized');
-    } else {
-        console.warn('VK Bridge not loaded');
-    }
 
-    let coins = 0;
+<!-- Модальное окно головоломки -->
+<div id="puzzleModal" class="modal hidden">
+    <div class="modal-content">
+        <h3>🔮 Угадай число (1–10)</h3>
+        <p>⚡ Стоимость попытки: <strong>50 Энергии</strong></p>
+        <p id="puzzleMessage">Введи число и испытай удачу!</p>
+        <input type="number" id="guessInput" min="1" max="10" placeholder="Число от 1 до 10">
+        <div>
+            <button id="submitGuessBtn">🎲 Угадать</button>
+        </div>
+        <div id="retryArea"></div>
+        <button id="closePuzzleBtn" class="close-btn">Закрыть</button>
+    </div>
+</div>
+
+<script>
+    // --- Игровые переменные ---
+    let energy = 100;        // новая валюта (бывшие монеты)
+    let crystals = 20;       // новая валюта (премиум)
     let clickPower = 1;
     let autoIncome = 0;
     let autoInterval = null;
     let doublePrice = 50;
     let autoPrice = 100;
 
-    const scoreDisplay = document.getElementById('scoreDisplay');
+    // DOM элементы
+    const energyDisplay = document.getElementById('energyDisplay');
+    const crystalDisplay = document.getElementById('crystalDisplay');
+    const clickPowerDisplay = document.getElementById('clickPowerDisplay');
     const clickButton = document.getElementById('clickButton');
     const boostDouble = document.getElementById('boostDouble');
     const boostAuto = document.getElementById('boostAuto');
@@ -169,45 +257,217 @@
     const doublePriceSpan = document.getElementById('doublePrice');
     const autoPriceSpan = document.getElementById('autoPrice');
 
-    function updateUI() {
-        scoreDisplay.innerText = Math.floor(coins);
-        doublePriceSpan.innerText = doublePrice;
-        autoPriceSpan.innerText = autoPrice;
-    }
+    // --- Логика сохранения ---
     function saveGame() {
-        localStorage.setItem('clickerSaveVK', JSON.stringify({coins,clickPower,autoIncome,doublePrice,autoPrice}));
+        const save = { energy, crystals, clickPower, autoIncome, doublePrice, autoPrice };
+        localStorage.setItem('clickerSaveV2', JSON.stringify(save));
     }
+
     function loadGame() {
-        const raw = localStorage.getItem('clickerSaveVK');
-        if(raw) {
-            const s = JSON.parse(raw);
-            coins = s.coins; clickPower = s.clickPower; autoIncome = s.autoIncome; doublePrice = s.doublePrice; autoPrice = s.autoPrice;
-            if(autoIncome>0 && !autoInterval) startAutoClicker();
-            updateUI();
+        const raw = localStorage.getItem('clickerSaveV2');
+        if (raw) {
+            try {
+                const s = JSON.parse(raw);
+                energy = s.energy ?? 100;
+                crystals = s.crystals ?? 20;
+                clickPower = s.clickPower ?? 1;
+                autoIncome = s.autoIncome ?? 0;
+                doublePrice = s.doublePrice ?? 50;
+                autoPrice = s.autoPrice ?? 100;
+                if (autoIncome > 0 && !autoInterval) startAutoClicker();
+                updateUI();
+            } catch(e) { console.warn("ошибка загрузки"); }
         }
     }
-    function startAutoClicker() {
-        if(autoInterval) clearInterval(autoInterval);
-        autoInterval = setInterval(()=>{ if(autoIncome>0){ coins+=autoIncome; updateUI(); saveGame(); } },1000);
+
+    // --- Обновление интерфейса ---
+    function updateUI() {
+        energyDisplay.innerText = Math.floor(energy);
+        crystalDisplay.innerText = Math.floor(crystals);
+        clickPowerDisplay.innerText = clickPower;
+        doublePriceSpan.innerText = doublePrice + ' 💎';
+        autoPriceSpan.innerText = autoPrice + ' 💎';
     }
-    clickButton.onclick = ()=>{
-        coins += clickPower;
+
+    // --- Автокликер (приносит энергию) ---
+    function startAutoClicker() {
+        if (autoInterval) clearInterval(autoInterval);
+        autoInterval = setInterval(() => {
+            if (autoIncome > 0) {
+                energy += autoIncome;
+                updateUI();
+                saveGame();
+            }
+        }, 1000);
+    }
+
+    // --- Клик по кристаллу (даёт энергию) ---
+    clickButton.onclick = () => {
+        energy += clickPower;
         updateUI();
         saveGame();
         clickButton.style.transform = 'scale(0.95)';
-        setTimeout(()=>clickButton.style.transform='',80);
+        setTimeout(() => clickButton.style.transform = '', 80);
     };
-    boostDouble.onclick = ()=>{
-        if(coins>=doublePrice){ coins-=doublePrice; clickPower++; doublePrice = Math.floor(doublePrice*1.8); updateUI(); saveGame(); }
+
+    // --- Улучшения (тратят кристаллы) ---
+    boostDouble.onclick = () => {
+        if (crystals >= doublePrice) {
+            crystals -= doublePrice;
+            clickPower++;
+            doublePrice = Math.floor(doublePrice * 1.8);
+            updateUI();
+            saveGame();
+        }
     };
-    boostAuto.onclick = ()=>{
-        if(coins>=autoPrice){ coins-=autoPrice; autoIncome++; autoPrice = Math.floor(autoPrice*1.7); updateUI(); saveGame(); if(autoIncome===1) startAutoClicker(); }
+    boostAuto.onclick = () => {
+        if (crystals >= autoPrice) {
+            crystals -= autoPrice;
+            autoIncome++;
+            autoPrice = Math.floor(autoPrice * 1.7);
+            updateUI();
+            saveGame();
+            if (autoIncome === 1) startAutoClicker();
+        }
     };
-    resetBtn.onclick = ()=>{
-        if(confirm('Сбросить прогресс?')){ coins=0; clickPower=1; autoIncome=0; doublePrice=50; autoPrice=100; if(autoInterval) clearInterval(autoInterval); autoInterval=null; updateUI(); saveGame(); }
+
+    // --- Сброс прогресса ---
+    resetBtn.onclick = () => {
+        if (confirm('♻️ Сбросить весь прогресс? Энергия, кристаллы и улучшения будут удалены.')) {
+            energy = 100;
+            crystals = 20;
+            clickPower = 1;
+            autoIncome = 0;
+            doublePrice = 50;
+            autoPrice = 100;
+            if (autoInterval) clearInterval(autoInterval);
+            autoInterval = null;
+            updateUI();
+            saveGame();
+        }
     };
+
+    // ========== ГОЛОВОЛОМКА (УГАДАЙ ЧИСЛО) ==========
+    const modal = document.getElementById('puzzleModal');
+    const openPuzzleBtn = document.getElementById('openPuzzleBtn');
+    const closePuzzleBtn = document.getElementById('closePuzzleBtn');
+    const submitGuessBtn = document.getElementById('submitGuessBtn');
+    const guessInput = document.getElementById('guessInput');
+    const puzzleMessage = document.getElementById('puzzleMessage');
+    const retryArea = document.getElementById('retryArea');
+
+    let currentSecretNumber = null;
+    let currentAttemptCostPaid = false;  // флаг, что вход оплачен (50 энергии)
+    let isRetryMode = false;              // режим повторной попытки за кристаллы
+
+    function generateSecret() {
+        return Math.floor(Math.random() * 10) + 1;
+    }
+
+    function resetPuzzleUI() {
+        guessInput.value = '';
+        puzzleMessage.innerHTML = 'Введи число и испытай удачу!';
+        retryArea.innerHTML = '';
+        currentAttemptCostPaid = false;
+        isRetryMode = false;
+        submitGuessBtn.disabled = false;
+        submitGuessBtn.innerText = '🎲 Угадать';
+    }
+
+    function openPuzzle() {
+        resetPuzzleUI();
+        currentSecretNumber = generateSecret();
+        modal.classList.remove('hidden');
+    }
+
+    closePuzzleBtn.onclick = () => {
+        modal.classList.add('hidden');
+    };
+
+    openPuzzleBtn.onclick = () => {
+        // Проверяем, хватает ли энергии на вход
+        if (energy >= 50) {
+            openPuzzle();
+        } else {
+            alert('❌ Не хватает ⚡Энергии! Тапай по кристаллу, чтобы получить энергию.');
+        }
+    };
+
+    function payEnergyForAttempt() {
+        if (energy >= 50 && !currentAttemptCostPaid) {
+            energy -= 50;
+            currentAttemptCostPaid = true;
+            updateUI();
+            saveGame();
+            return true;
+        }
+        return false;
+    }
+
+    function processGuess() {
+        if (!currentAttemptCostPaid) {
+            // Пытаемся списать энергию при первой попытке
+            if (!payEnergyForAttempt()) {
+                puzzleMessage.innerHTML = '❌ Не хватает ⚡Энергии для попытки! Закрой окно и накопай энергию.';
+                return;
+            }
+        }
+
+        const guess = parseInt(guessInput.value);
+        if (isNaN(guess) || guess < 1 || guess > 10) {
+            puzzleMessage.innerHTML = '⚠️ Введи число от 1 до 10!';
+            return;
+        }
+
+        if (guess === currentSecretNumber) {
+            // ПОБЕДА!
+            const rewardCrystals = 200;
+            crystals += rewardCrystals;
+            clickPower++;
+            puzzleMessage.innerHTML = `🎉 ПОБЕДА! Число было ${currentSecretNumber}. Ты получаешь ${rewardCrystals} 💎 Кристаллов и +1 к силе клика! 🎉`;
+            updateUI();
+            saveGame();
+            submitGuessBtn.disabled = true;
+            retryArea.innerHTML = ''; // победа — игра окончена
+            // Можно закрыть окно через 2 секунды, но пусть игрок закроет сам
+        } else {
+            // ПРОИГРЫШ
+            puzzleMessage.innerHTML = `❌ Не угадал! Загадано не ${guess}. Хочешь попробовать ещё раз?`;
+
+            // Предлагаем повторную попытку за кристаллы
+            if (!isRetryMode) {
+                const retryButton = document.createElement('button');
+                retryButton.innerText = '🔄 Попробовать ещё раз за 100 💎';
+                retryButton.className = 'retry-btn';
+                retryButton.onclick = () => {
+                    if (crystals >= 100) {
+                        crystals -= 100;
+                        updateUI();
+                        saveGame();
+                        // Перезапускаем головоломку с новым числом, не тратя энергию
+                        currentSecretNumber = generateSecret();
+                        isRetryMode = true;
+                        currentAttemptCostPaid = true; // энергию повторно не берём
+                        puzzleMessage.innerHTML = 'Новая попытка! Введи число от 1 до 10.';
+                        guessInput.value = '';
+                        retryArea.innerHTML = '';
+                        submitGuessBtn.disabled = false;
+                    } else {
+                        alert('❌ Не хватает 💎 Кристаллов! Закрой окно и заработай кристаллы через головоломку или улучшения.');
+                    }
+                };
+                retryArea.innerHTML = '';
+                retryArea.appendChild(retryButton);
+            }
+        }
+    }
+
+    submitGuessBtn.onclick = processGuess;
+
+    // --- Инициализация игры ---
     loadGame();
-    if(autoIncome>0 && !autoInterval) startAutoClicker();
+    if (autoIncome > 0 && !autoInterval) startAutoClicker();
+    updateUI();
 </script>
 </body>
 </html>
